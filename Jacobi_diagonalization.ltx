@@ -1,0 +1,111 @@
+%Jacobi diagonalization
+\documentclass[a4paper,11pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\pagestyle{empty}
+\begin{document}
+\begin{center}
+$$
+1 \le i \le n, 1 \le j \le n, 1 \le p \le 1, 1 \le q \le n, p \neq q
+$$
+$$
+A_{n \times n}, B_{n \times n}, U_{n \times n}
+$$
+$$
+U_{ij}=
+\left\{
+\begin{aligned}
+\mathrm{cos}\theta &, i = j = p \\
+-\mathrm{sin}\theta &, i = p; j = q \\
+\mathrm{sin}\theta &, i = q; j = p \\
+\mathrm{cos}\theta &, i = j = q \\
+1 &, i = j \neq p; i = j \neq q \\
+0 &, otherwise
+\end{aligned}
+\right.
+$$
+$$
+U^\top U = I
+$$
+$$
+B = U^\top A U
+$$
+$$
+\left\{
+\begin{aligned}
+B_{pp} &= A_{pp}\mathrm{cos}^2\theta + A_{qq}\mathrm{sin}^2\theta + 2A_{pq}\mathrm{sin}\theta\mathrm{cos}\theta \\
+B_{qq} &= A_{pp}\mathrm{sin}^2\theta + A_{qq}\mathrm{cos}^2\theta - 2A_{pq}\mathrm{sin}\theta\mathrm{cos}\theta \\
+B_{pq} &= B_{qp} = \frac{1}{2}\left(A_{qq}-A_{pp}\right)\mathrm{sin}\left(2\theta\right)+A_{pq}\mathrm{cos}\left(2\theta\right) \\
+\end{aligned}
+\right.
+$$
+$$
+\begin{pmatrix}
+B_{pj} \\ 
+B_{qj}
+\end{pmatrix}
+=
+\begin{pmatrix}
+ \mathrm{cos}\theta & \mathrm{sin}\theta \\ 
+-\mathrm{sin}\theta & \mathrm{cos}\theta
+\end{pmatrix}
+\begin{pmatrix}
+A_{pj} \\ 
+A_{qj}
+\end{pmatrix}, j \neq p; j \neq q
+$$
+$$
+\begin{pmatrix}
+B_{ip} \\ 
+B_{iq}
+\end{pmatrix}
+=
+\begin{pmatrix}
+ \mathrm{cos}\theta & \mathrm{sin}\theta \\ 
+-\mathrm{sin}\theta & \mathrm{cos}\theta
+\end{pmatrix}
+\begin{pmatrix}
+A_{ip} \\ 
+A_{iq}
+\end{pmatrix}, i \neq p; i \neq q
+$$
+$$
+B_{ij} = B_{ji} = A_{ij} = A_{ji}, i \neq p; i \neq q; j \neq p; j \neq q
+$$
+$$
+Y_{n \times n}, X_{n \times n}
+$$
+$$
+Y = XU
+$$
+$$
+\begin{pmatrix}
+Y_{ip} \\ 
+Y_{iq}
+\end{pmatrix}
+=
+\begin{pmatrix}
+ \mathrm{cos}\theta & \mathrm{sin}\theta \\ 
+-\mathrm{sin}\theta & \mathrm{cos}\theta
+\end{pmatrix}
+\begin{pmatrix}
+X_{ip} \\ 
+X_{iq}
+\end{pmatrix}, i \neq p; i \neq q
+$$
+$$
+Y_{ij} = X_{ij}, j \neq p; j \neq q
+$$
+while $B_{pq} = B_{qp} = 0$
+$$
+\theta = 
+\left\{
+\begin{aligned}
+\frac{1}{2}\mathrm{arctan}\frac{2A_{pq}}{A_{pp}-A_{qq}}&, A_{pp} \neq A_{qq} \\
+\frac{\pi}{4}&, A_{pp} = A_{qq}
+\end{aligned}
+\right.
+$$
+\end{center}
+\end{document}
+

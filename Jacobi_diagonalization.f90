@@ -247,7 +247,7 @@ subroutine Jacobi_diagonalization(n, a, w, v, vecp, vecq, uplo, status, destroy)
                     end if
                 end do
             end do
-            if (abs(mat(p, q)) <= tol) then
+            if (abs_pq < tol) then
                 exit
             end if
             call Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
@@ -268,7 +268,7 @@ subroutine Jacobi_diagonalization(n, a, w, v, vecp, vecq, uplo, status, destroy)
                     end if
                 end do
             end do
-            if (abs(mat(p, q)) <= tol) then
+            if (abs_pq < tol) then
                 exit
             end if
             ! rotate once
@@ -283,6 +283,8 @@ subroutine Jacobi_diagonalization(n, a, w, v, vecp, vecq, uplo, status, destroy)
     forall (i = 1:n)
         w(i) = mat(i, i)
     end forall
+
+    ! if not converged, returns 1
     if (iloop == nloops_max) then
         status = 1
     end if
@@ -318,7 +320,7 @@ subroutine Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
     pp = mat(p, p)
     pq = mat(p, q)
     qq = mat(q, q)
-    if (abs(pp -  qq) > 0.d0) then
+    if (abs(pp - qq) > 0.d0) then
         theta = atan(2.d0 * pq / (pp - qq)) / 2.d0
     else
         theta = atan(1.d0)

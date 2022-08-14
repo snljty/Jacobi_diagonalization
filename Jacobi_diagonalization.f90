@@ -358,7 +358,7 @@ subroutine sort_eigen(n, w, v)
     double precision, dimension(n), intent(inout) :: w
     double precision, dimension(n, n), intent(inout) :: v
 
-    integer :: i, j
+    integer :: i
     integer :: dad, son
     integer, dimension(:), allocatable :: ind
     double precision, dimension(:), allocatable :: swp

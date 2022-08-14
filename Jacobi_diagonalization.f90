@@ -431,6 +431,7 @@ subroutine sort_eigen(n, w, v)
         i = pos + 1
     end do
 
+    ! release memory
     deallocate(ind)
     deallocate(swp)
 

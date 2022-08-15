@@ -435,7 +435,7 @@ void Sort_eigen(int n, double *w, double *v)
             {
                 ++ son;
             }
-            if (w[dad] >= w[son])
+            if (w[son] <= w[dad])
             {
                 break;
             }
@@ -460,7 +460,7 @@ void Sort_eigen(int n, double *w, double *v)
             {
                 ++ son;
             }
-            if (w[dad] > w[son])
+            if (w[son] <= w[dad])
             {
                 break;
             }

@@ -381,7 +381,7 @@ subroutine sort_eigen(n, w, v)
                     son = son + 1
                 end if
             end if
-            if (w(son) < w(dad)) then
+            if (w(son) <= w(dad)) then
                 exit
             else
                 call swap_double(w(dad), w(son))

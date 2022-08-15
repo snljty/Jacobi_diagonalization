@@ -77,8 +77,8 @@ program main
         a(i, j) = 1.d0
         a(j, i) = 1.d0
     end do
-    ! a(1, n) = 0.d0
-    ! a(n, 1) = 0.d0
+    a(1, n) = 0.d0
+    a(n, 1) = 0.d0
 
     ! or
     ! call random_number(a)
@@ -402,7 +402,7 @@ subroutine sort_eigen(n, w, v)
                     son = son + 1
                 end if
             end if
-            if (w(son) < w(dad)) then
+            if (w(son) <= w(dad)) then
                 exit
             else
                 call swap_double(w(dad), w(son))

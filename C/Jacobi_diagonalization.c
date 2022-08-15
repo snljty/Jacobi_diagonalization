@@ -50,10 +50,8 @@ int main(int argc, const char **argv)
         * Get_Mat_Ptr(a, i, j, n) = 1.0;
         * Get_Mat_Ptr(a, j, i, n) = 1.0;
     }
-    /*
     * Get_Mat_Ptr(a, 0, n - 1, n) = 0.0;
     * Get_Mat_Ptr(a, n - 1, 0, n) = 0.0;
-    */
 
     /* or */
     /*
@@ -437,7 +435,7 @@ void Sort_eigen(int n, double *w, double *v)
             {
                 ++ son;
             }
-            if (w[dad] > w[son])
+            if (w[dad] >= w[son])
             {
                 break;
             }

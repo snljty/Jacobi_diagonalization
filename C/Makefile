@@ -5,8 +5,8 @@ SHELL := cmd
 CC := gcc
 CLINKER := $(CC)
 
-OPTS ?= -g
-OPTLV ?= -O0
+OPTS ?= -s
+OPTLV ?= -O2
 
 LAPACKROOT ?= C:\lapack-3.10.1
 LIBPATH ?= -L $(LAPACKROOT)\lib

@@ -20,10 +20,11 @@ int main(int argc, const char **argv)
     int n;
     int const n_def = 5;
     double *a = NULL, *v = NULL, *w = NULL, *vecp = NULL, *vecq = NULL;
-    int i, j;
+    int i, j, k;
     int status;
     double *v_cmp = NULL, *w_cmp = NULL;
     bool const is_compare = true;
+    double *rdm = NULL; /* random */
 
     /* pharse command arguments */
     if (argc - 1 == 1)
@@ -56,17 +57,27 @@ int main(int argc, const char **argv)
     /* or */
     /*
     srand((unsigned int)time(NULL));
-    for (i = 0; i < n; ++ i)
+    rdm = (double *)malloc(n * n * sizeof(double));
+    for (j = 0; j < n; ++ j)
     {
-        for (j = 0; j <= i; ++ j)
+        for (i = 0; i < n; ++ i)
         {
-            * Get_Mat_Ptr(a, i, j, n) = (double)(rand() * (RAND_MAX + 1) + rand()) / (double)((RAND_MAX + 1) * (RAND_MAX + 1));
-            if (i != j)
+            * Get_Mat_Ptr(rdm, i, j, n) = (double)(rand() * (RAND_MAX + 1) + rand()) / (double)((RAND_MAX + 1) * (RAND_MAX + 1));
+        }
+    }
+    memset(a, 0, n * n * sizeof(double));
+    for (j = 0; j < n; ++ j)
+    {
+        for (i = 0; i < n; ++ i)
+        {
+            for (k = 0; k < n; ++ k)
             {
-                * Get_Mat_Ptr(a, j, i, n) = * Get_Mat_Ptr(a, i, j, n)
+                * Get_Mat_Ptr(a, i, j, n) += Get_Mat_Val(rdm, k, i, n) * Get_Mat_Val(rdm, k, j, n);
             }
         }
     }
+    free(rdm);
+    rdm = NULL;
     */
 
     printf("%s\n", "Matrix:");

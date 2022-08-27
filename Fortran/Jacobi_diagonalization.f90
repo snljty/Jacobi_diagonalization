@@ -35,6 +35,9 @@ program main
     double precision, dimension(:), allocatable :: w_cmp
     logical, parameter :: is_compare = .true.
 
+    integer :: mat_unit
+    character(len=7), parameter :: mat_name = "mat.dat"
+
     ! get command arguments
     argc = command_argument_count()
     call get_command_argument(0, length = argl)
@@ -71,18 +74,20 @@ program main
     allocate(a(n, n), v(n, n), w(n), vecp(n), vecq(n))
 
     ! initialize a
-    a = 0.d0
-    do i = 1, n
-        j = 1 + mod(i, n)
-        a(i, j) = 1.d0
-        a(j, i) = 1.d0
-    end do
-    a(1, n) = 0.d0
-    a(n, 1) = 0.d0
+    ! a = 0.d0
+    ! do i = 1, n
+    !     j = 1 + mod(i, n)
+    !     a(i, j) = 1.d0
+    !     a(j, i) = 1.d0
+    ! end do
+    ! a(1, n) = 0.d0
+    ! a(n, 1) = 0.d0
 
     ! or
-    ! call random_number(a)
-    ! a = matmul(transpose(a), a)
+    open(newunit = mat_unit, file = mat_name, status = "old", action = "read", &
+        access = "direct", form = "unformatted", recl = 8 * n ** 2)
+    read(mat_unit, rec = 1) a
+    close(mat_unit)
 
     write(*, '(a)') "Matrix:"
     call print_square_matrix(n, a)
@@ -182,6 +187,8 @@ subroutine Jacobi_diagonalization(n, a, w, v, vecp, vecq, uplo, status, destroy)
     integer, intent(out) :: status
     logical, optional :: destroy
 
+    logical, external :: is_converged
+
     integer :: i, j, p, q
     double precision, dimension(:, :), allocatable, target :: tmp
     double precision, dimension(:, :), pointer :: mat
@@ -189,6 +196,7 @@ subroutine Jacobi_diagonalization(n, a, w, v, vecp, vecq, uplo, status, destroy)
 
     integer :: iloop, nloops_max
     double precision, parameter :: tol = epsilon(1.d0)
+    logical, parameter :: is_greddy = .true.
 
     ! check uplo
     if (uplo /= "U" .and. uplo /= "u" .and. uplo /= "L" .and. uplo /= "l") then
@@ -231,50 +239,78 @@ subroutine Jacobi_diagonalization(n, a, w, v, vecp, vecq, uplo, status, destroy)
     nloops_max = 30 * n ** 2 ! do not set less than 2 * n ** 2
     ! 30 is from OpenCV
 
+    ! the main loop
     iloop = 0
     ! the upper triangle will be used
     if (uplo == "U" .or. uplo == "u") then
-        do while (iloop < nloops_max)
-            p = 2
-            q = 1
-            abs_pq = abs(mat(p, q))
-            do j = 2, n
-                do i = 1, j - 1
-                    if (abs(mat(i, j)) > abs_pq) then
-                        p = i
-                        q = j
-                        abs_pq = abs(mat(p, q))
-                    end if
+        if (is_greddy) then
+            do while (iloop < nloops_max)
+                p = 2
+                q = 1
+                abs_pq = abs(mat(p, q))
+                do j = 2, n
+                    do i = 1, j - 1
+                        if (abs(mat(i, j)) > abs_pq) then
+                            p = i
+                            q = j
+                            abs_pq = abs(mat(p, q))
+                        end if
+                    end do
+                end do
+                if (abs_pq <= tol) then
+                    exit
+                end if
+                call Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
+                iloop = iloop + 1
+            end do
+        else
+            do while (iloop < nloops_max)
+                if (is_converged(n, mat, "U", tol)) then
+                    exit
+                end if
+                do q = 2, n
+                    do p = 1, q - 1
+                        call Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
+                        iloop = iloop + 1
+                    end do
                 end do
             end do
-            if (abs_pq < tol) then
-                exit
-            end if
-            call Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
-            iloop = iloop + 1
-        end do
+        end if
     ! the lower triangle will be used
     else if (uplo == "L" .or. uplo == "l") then
-        do while (iloop < nloops_max)
-            p = 1
-            q = 2
-            abs_pq = abs(mat(p, q))
-            do j = 1, n - 1
-                do i = j + 1, n
-                    if (abs(mat(i, j)) > abs_pq) then
-                        p = i
-                        q = j
-                        abs_pq = abs(mat(p, q))
-                    end if
+        if (is_greddy) then
+            do while (iloop < nloops_max)
+                p = 1
+                q = 2
+                abs_pq = abs(mat(p, q))
+                do j = 1, n - 1
+                    do i = j + 1, n
+                        if (abs(mat(i, j)) > abs_pq) then
+                            p = i
+                            q = j
+                            abs_pq = abs(mat(p, q))
+                        end if
+                    end do
+                end do
+                if (abs_pq <= tol) then
+                    exit
+                end if
+                call Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
+                iloop = iloop + 1
+            end do
+        else
+            do while (iloop < nloops_max)
+                if (is_converged(n, mat, "L", tol)) then
+                    exit
+                end if
+                do q = 1, n - 1
+                    do p = q + 1, n
+                        call Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
+                        iloop = iloop + 1
+                    end do
                 end do
             end do
-            if (abs_pq < tol) then
-                exit
-            end if
-            ! rotate once
-            call Jacobi_rotate(n, p, q, mat, v, vecp, vecq, status)
-            iloop = iloop + 1
-        end do
+        end if
     else
         continue ! never happen
     end if
@@ -285,7 +321,7 @@ subroutine Jacobi_diagonalization(n, a, w, v, vecp, vecq, uplo, status, destroy)
     end forall
 
     ! if not converged, returns 1
-    if (iloop == nloops_max) then
+    if (iloop >= nloops_max) then
         status = 1
     end if
 
@@ -461,4 +497,42 @@ subroutine swap_int(a, b)
 
     return
 end subroutine swap_int
+
+logical function is_converged(n, mat, uplo, tol)
+    implicit none
+    integer, intent(in) :: n
+    double precision, dimension(n, *), intent(in) :: mat
+    character(len=1), intent(in) :: uplo
+    double precision, intent(in) :: tol
+
+    integer :: i, j
+
+    is_converged = .false.
+
+    if (uplo == "U" .or. uplo == "u") then
+        do j = 2, n
+            do i = 1, j - 1
+                if (abs(mat(i, j)) > tol) then
+                    return
+                end if
+            end do
+        end do
+        is_converged = .true.
+        return
+    else if (uplo == "L" .or. uplo == "l") then
+        do j = 1, n - 1
+            do i = j + 1, n
+                if (abs(mat(i, j)) > tol) then
+                    return
+                end if
+            end do
+        end do
+        is_converged = .true.
+        return
+    else
+        return
+    end if
+
+    return ! should never happen
+end function is_converged
 

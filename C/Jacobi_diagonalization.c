@@ -22,9 +22,12 @@ int main(int argc, const char **argv)
     double *a = NULL, *v = NULL, *w = NULL, *vecp = NULL, *vecq = NULL;
     int i, j, k;
     int status;
+
     double *v_cmp = NULL, *w_cmp = NULL;
     bool const is_compare = true;
-    double *rdm = NULL; /* random */
+
+    FILE *mat_fl = NULL;
+    char const mat_name[] = "mat.dat";
 
     /* pharse command arguments */
     if (argc - 1 == 1)
@@ -44,6 +47,7 @@ int main(int argc, const char **argv)
     vecq = (double *)malloc(n * sizeof(double));
 
     /* initialize a */
+    /*
     memset(a, 0, n * n * sizeof(double));
     for (i = 0; i < n; ++ i)
     {
@@ -53,32 +57,21 @@ int main(int argc, const char **argv)
     }
     * Get_Mat_Ptr(a, 0, n - 1, n) = 0.0;
     * Get_Mat_Ptr(a, n - 1, 0, n) = 0.0;
+    */
 
     /* or */
-    /*
-    srand((unsigned int)time(NULL));
-    rdm = (double *)malloc(n * n * sizeof(double));
-    for (j = 0; j < n; ++ j)
+    if (! (mat_fl = fopen(mat_name, "rb")))
     {
-        for (i = 0; i < n; ++ i)
-        {
-            * Get_Mat_Ptr(rdm, i, j, n) = (double)(rand() * (RAND_MAX + 1) + rand()) / (double)((RAND_MAX + 1) * (RAND_MAX + 1));
-        }
+        fprintf(stderr, "Error! Cannot open \"%s\" for reading.\n", mat_name);
+        exit(EXIT_FAILURE);
     }
-    memset(a, 0, n * n * sizeof(double));
-    for (j = 0; j < n; ++ j)
+    if (fread(a, sizeof(double), n * n, mat_fl) != n * n)
     {
-        for (i = 0; i < n; ++ i)
-        {
-            for (k = 0; k < n; ++ k)
-            {
-                * Get_Mat_Ptr(a, i, j, n) += Get_Mat_Val(rdm, k, i, n) * Get_Mat_Val(rdm, k, j, n);
-            }
-        }
+        fprintf(stderr, "Error! Cannot read %d (%d * %d) numbers from \"%s\".\n", n * n, n, n, mat_name);
+        exit(EXIT_FAILURE);
     }
-    free(rdm);
-    rdm = NULL;
-    */
+    fclose(mat_fl);
+    mat_fl = NULL;
 
     printf("%s\n", "Matrix:");
     Print_square_matrix(n, a);
@@ -218,11 +211,12 @@ int Jacobi_diagonalization(int n, double *a, double *w, double *v, double *vecp,
 {
     int status;
     int i, j, p, q;
-    double *tmp = NULL, *mat = NULL;;
+    double *tmp = NULL, *mat = NULL;
     double abs_pq;
 
     int iloop, nloops_max;
     double const tol = DBL_EPSILON;
+    bool const is_greddy = true;
 
     /* check uplo */
     if (uplo != 'U' && uplo != 'u' && uplo != 'L' && uplo != 'l')
@@ -268,63 +262,104 @@ int Jacobi_diagonalization(int n, double *a, double *w, double *v, double *vecp,
     nloops_max = 30 * n * n; /* do not set less than 2 * n * n */
     /* 30 is from OpenCV */
 
+    /* the main loop */
     iloop = 0;
     /* the upper triangle will be used */
     if (uplo == 'U' || uplo == 'u')
     {
-        while (iloop < nloops_max)
+        if (is_greddy)
         {
-            p = 1;
-            q = 0;
-            abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
-            for (j = 1; j < n; ++ j)
+            while (iloop < nloops_max)
             {
-                for (i = 0; i < j; ++ i)
+                p = 1;
+                q = 0;
+                abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
+                for (j = 1; j < n; ++ j)
                 {
-                    if (fabs(Get_Mat_Val(mat, i, j, n)) > abs_pq)
+                    for (i = 0; i < j; ++ i)
                     {
-                        p = i;
-                        q = j;
-                        abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
+                        if (fabs(Get_Mat_Val(mat, i, j, n)) > abs_pq)
+                        {
+                            p = i;
+                            q = j;
+                            abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
+                        }
+                    }
+                }
+                if (abs_pq <= tol)
+                {
+                    break;
+                }
+                status = Jacobi_rotate(n, p, q, mat, v, vecp, vecq);
+                ++ iloop;
+            }
+        }
+        else
+        {
+            while (iloop < nloops_max)
+            {
+                if (Is_converged(n, mat, 'U', tol))
+                {
+                    break;
+                }
+                for (q = 1; q < n; ++ q)
+                {
+                    for (p = 0; p < q; ++ p)
+                    {
+                        status = Jacobi_rotate(n, p, q, mat, v, vecp, vecq);
+                        ++ iloop;
                     }
                 }
             }
-            if (abs_pq < tol)
-            {
-                break;
-            }
-            /* loop once */
-            status = Jacobi_rotate(n, p, q, mat, v, vecp, vecq);
-            ++ iloop;
         }
     }
     /* the lower triangle will be used */
     else if (uplo == 'L' || uplo == 'l')
     {
-        while (iloop < nloops_max)
+        if (is_greddy)
         {
-            p = 0;
-            q = 1;
-            abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
-            for (j = 0; j < n - 1; ++ j)
+            while (iloop < nloops_max)
             {
-                for (i = j + 1; i < n; ++ i)
+                p = 0;
+                q = 1;
+                abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
+                for (j = 0; j < n - 1; ++ j)
                 {
-                    if (fabs(Get_Mat_Val(mat, i, j, n)) > abs_pq)
+                    for (i = j + 1; i < n; ++ i)
                     {
-                        p = i;
-                        q = j;
-                        abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
+                        if (fabs(Get_Mat_Val(mat, i, j, n)) > abs_pq)
+                        {
+                            p = i;
+                            q = j;
+                            abs_pq = fabs(Get_Mat_Val(mat, p, q, n));
+                        }
+                    }
+                }
+                if (abs_pq <= tol)
+                {
+                    break;
+                }
+                status = Jacobi_rotate(n, p, q, mat, v, vecp, vecq);
+                ++ iloop;
+            }
+        }
+        else
+        {
+            while (iloop < nloops_max)
+            {
+                if (Is_converged(n, mat, 'L', tol))
+                {
+                    break;
+                }
+                for (q = 0; q < n - 1; ++ q)
+                {
+                    for (p = q + 1; p < n; ++ p)
+                    {
+                        status = Jacobi_rotate(n, p, q, mat, v, vecp, vecq);
+                        ++ iloop;
                     }
                 }
             }
-            if (abs_pq < tol)
-            {
-                break;
-            }
-            /* loop once */
-            status = Jacobi_rotate(n, p, q, mat, v, vecp, vecq);
-            ++ iloop;
         }
     }
 
@@ -335,7 +370,7 @@ int Jacobi_diagonalization(int n, double *a, double *w, double *v, double *vecp,
     }
 
     /* if not converged, returns 1 */
-    if (iloop == nloops_max)
+    if (iloop >= nloops_max)
     {
         status = -1;
     }
@@ -571,5 +606,45 @@ void Print_repeat(FILE *fp, char const *s, int num)
     }
 
     return;
+}
+
+bool Is_converged(int n, double const *mat, char uplo, double tol)
+{
+    int i, j;
+
+    if (uplo == 'U' || uplo == 'u')
+    {
+        for (j = 1; j < n; ++ j)
+        {
+            for (i = 0; i < j; ++ i)
+            {
+                if (fabs(Get_Mat_Val(mat, i, j, n)) > tol)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    else if (uplo == 'L' || uplo == 'l')
+    {
+        for (j = 0; j < n - 1; ++ j)
+        {
+            for (i = j + 1; i < n; ++ i)
+            {
+                if (fabs(Get_Mat_Val(mat, i, j, n)) > tol)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+    return false; /* should never happen */
 }
 

@@ -19,6 +19,10 @@ Jacobi_diagonalization.exe: Jacobi_diagonalization.obj compare.obj
 	@echo Linking $@ against $^ and lapack ...
 	$(FLINKER) -o $@ $^ -static $(LIBPATH) $(LIB) $(OPTS)
 
+genmat.exe: genmat.obj
+	@echo Linking $@ against $^ ...
+	$(FLINKER) -o $@ $^ -static $(OPTS)
+
 %.obj: %.f90
 	@echo Compiling $@ from $< ...
 	$(FC) -o $@ -c $< $(OPTLV) $(OPTS)

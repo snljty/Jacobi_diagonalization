@@ -29,5 +29,7 @@ void Copy_array(int n, double const *a, int inda, double *b, int indb);
 
 void Print_repeat(FILE *fp, char const *s, int num);
 
+bool Is_converged(int n, double const *mat, char uplo, double tol);
+
 # endif
 

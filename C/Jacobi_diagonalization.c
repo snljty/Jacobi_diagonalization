@@ -32,7 +32,10 @@ int main(int argc, const char **argv)
     /* pharse command arguments */
     if (argc - 1 == 1)
     {
-        sscanf(argv[1], "%d", & n);
+        if (sscanf(argv[1], "%d", & n) != 1 || n < 1)
+        {
+            n = n_def;
+        }
     }
     else
     {
@@ -258,7 +261,7 @@ int Jacobi_diagonalization(int n, double *a, double *w, double *v, double *vecp,
         * Get_Mat_Ptr(v, i, i, n) = 1.0;
     }
 
-    /* maximum number of loops  */
+    /* maximum number of loops */
     nloops_max = 30 * n * n; /* do not set less than 2 * n * n */
     /* 30 is from OpenCV */
 

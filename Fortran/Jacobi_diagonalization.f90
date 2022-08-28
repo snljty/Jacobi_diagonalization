@@ -59,7 +59,13 @@ program main
 
     ! pharse command arguments
     if (argc == 1) then
-        read(argv(1), *) n
+        read(argv(1), *, iostat = status) n
+        if (status /= 0) then
+            n = n_def
+        end if
+        if (n < 1) then
+            n = n_def
+        end if
     else
         n = n_def
     end if

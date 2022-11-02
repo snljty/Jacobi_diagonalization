@@ -497,7 +497,7 @@ void Sort_eigen(int n, double *w, double *v)
             }
         }
     }
-    for (i = n - 1; i > 0; i--)
+    for (i = n - 1; i > 0; -- i)
     {
         Swap_double(w, w + i);
         Swap_int(ind, ind + i);
